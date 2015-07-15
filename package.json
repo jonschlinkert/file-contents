@@ -1,0 +1,63 @@
+{
+  "name": "file-contents",
+  "description": "Set the `contents` property on a file object in a stream.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/jonschlinkert/file-contents",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/file-contents",
+  "bugs": {
+    "url": "https://github.com/jonschlinkert/file-contents/issues"
+  },
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "main": "index.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "extend-shallow": "^2.0.0",
+    "file-stat": "^0.1.0",
+    "graceful-fs": "^4.1.2",
+    "through2": "^2.0.0"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "keywords": [
+    "buffer",
+    "content",
+    "contents",
+    "directory",
+    "file",
+    "filepath",
+    "fs",
+    "is",
+    "is-directory",
+    "is-file",
+    "path",
+    "plugin",
+    "read",
+    "read-file",
+    "readdir",
+    "stat",
+    "stats",
+    "stream",
+    "through",
+    "vinyl"
+  ],
+  "verb": {
+    "related": {
+      "list": [
+        "stream-loader",
+        "file-stat",
+        "vinyl",
+        "vinyl-fs"
+      ]
+    }
+  }
+}
