@@ -25,12 +25,16 @@ describe('add a `contents` property to the given object', function () {
       });
   });
 
-  it('`getContents` should work as an async function:', function (done) {
-    contents.getContents({path: 'README.md'}, function (err, file) {
+  it('should expose an `async` method:', function (done) {
+    contents.async({path: 'README.md'}, function (err, file) {
       if (err) return done(err);
-
       assert.equal(typeof file.contents.toString(), 'string');
       done();
     });
+  });
+
+  it('should expose a `sync` method:', function () {
+    var file = contents.sync({path: 'README.md'});
+    assert.equal(typeof file.contents.toString(), 'string');
   });
 });

@@ -16,7 +16,7 @@ module.exports = function fileContents(options) {
   return through.obj(function (file, enc, cb) {
     var stream = this;
 
-    getContents(file, options, function (err, res) {
+    async(file, options, function (err, res) {
       if (err) {
         stream.emit('error', err);
         return cb(err);
@@ -27,7 +27,20 @@ module.exports = function fileContents(options) {
   });
 };
 
-function getContents(file, options, cb) {
+/**
+ * Async method for getting `file.contents`.
+ *
+ * @param  {Object} `file`
+ * @param  {Object} `options`
+ * @param  {Function} `cb`
+ * @return {Object}
+ */
+
+function async(file, options, cb) {
+  if (typeof file !== 'object') {
+    throw new TypeError('file-contents async expects `file` to be an object.');
+  }
+
   if (typeof options === 'function') {
     cb = options;
     options = {};
@@ -35,7 +48,7 @@ function getContents(file, options, cb) {
 
   if (typeof file.stat === 'undefined') {
     return stats.getStats(file, function (err, res) {
-      getContents(res, options, cb);
+      async(res, options, cb);
     });
   }
 
@@ -67,7 +80,52 @@ function getContents(file, options, cb) {
 }
 
 /**
- * Expose `getContents`
+ * Sync method for getting `file.contents`.
+ *
+ * @param  {Object} `file`
+ * @param  {Object} `options`
+ * @return {Object}
  */
 
-module.exports.getContents = getContents;
+function sync(file, options) {
+  if (typeof file !== 'object') {
+    throw new TypeError('file-contents sync expects `file` to be an object.');
+  }
+
+  if (typeof file.stat === 'undefined') {
+    file.stat = fs.statSync(file.path);
+  }
+
+  if (file.stat.isDirectory()) {
+    return file;
+  }
+
+  var opts = extend({}, options, file.options || {});
+  if (opts.noread === true || opts.read === false) {
+    return file;
+  }
+
+  if (opts.buffer !== false) {
+    file.contents = fs.readFileSync(file.path);
+    return file;
+  }
+
+  try {
+    file.contents = fs.createReadStream(file.path);
+    return file;
+  } catch (err) {
+    throw new Error(err);
+  }
+}
+
+/**
+ * Expose `async` method
+ */
+
+module.exports.async = async;
+
+/**
+ * Expose `sync` method
+ */
+
+module.exports.sync = sync;
