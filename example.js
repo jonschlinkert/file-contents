@@ -11,9 +11,5 @@ function toStream(fp) {
 toStream('README.md')
   .pipe(contents())
   .on('data', function (file) {
-    // adds `contents` object to file
     console.log(file.contents.toString());
-  })
-  .on('end', function () {
-    console.log('Done.');
   });

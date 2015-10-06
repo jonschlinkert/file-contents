@@ -15,10 +15,10 @@ require = utils;
  * (here, `require` is actually lazy-cache)
  */
 
-require('graceful-fs', 'fs');
-require('through2', 'through');
-require('extend-shallow', 'extend');
 require('file-stat', 'stats');
+require('graceful-fs', 'fs');
+require('extend-shallow', 'extend');
+require('through2', 'through');
 
 /**
  * Reset require
