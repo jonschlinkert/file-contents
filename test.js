@@ -1,6 +1,7 @@
 'use strict';
 
 require('mocha');
+var isBuffer = require('is-buffer');
 var through = require('through2');
 var assert = require('assert');
 var contents = require('./');
@@ -20,7 +21,7 @@ describe('plugin', function () {
       .on('error', console.error)
       .pipe(contents())
       .on('data', function (file) {
-        assert.equal(Buffer.isBuffer(file.contents), true);
+        assert.equal(isBuffer(file.contents), true);
       })
       .on('end', function () {
         done();
@@ -33,7 +34,7 @@ describe('plugin', function () {
       .on('error', function (err) {
         assert(err);
         assert(/no such file or directory/.test(err.message));
-        done()
+        done();
       });
   });
 
@@ -43,7 +44,7 @@ describe('plugin', function () {
       .on('error', function (err) {
         assert(err);
         assert.equal(err.message, 'file.stat.isDirectory is not a function');
-        done()
+        done();
       });
   });
 
@@ -53,7 +54,7 @@ describe('plugin', function () {
       .on('error', function (err) {
         assert(err);
         assert.equal(err.message, 'file.stat.isDirectory is not a function');
-        done()
+        done();
       });
   });
 });
@@ -119,13 +120,13 @@ describe('async', function () {
     contents.async({path: 'README.md'}, function (err, file) {
       if (err) return done(err);
       assert(file);
-      assert(Buffer.isBuffer(file.contents));
+      assert(isBuffer(file.contents));
       done();
     });
   });
 
   it('should handle read errors when a file does not exist:', function (done) {
-    contents.async({path: 'foo.md'}, function (err, file) {
+    contents.async({path: 'foo.md'}, function (err) {
       assert(err);
       assert.equal(err.message, 'ENOENT: no such file or directory, lstat \'foo.md\'');
       done();
@@ -162,6 +163,16 @@ describe('sync', function () {
     var file = contents.sync({path: 'fixtures'});
     assert(file);
     assert.equal(typeof file.contents, 'undefined');
+  });
+
+  it('should handle errors when a file does not exist:', function (done) {
+    try {
+      contents.sync({path: 'foo.md'});
+    } catch(err) {
+      assert(err);
+      assert.equal(err.message, 'ENOENT: no such file or directory, lstat \'foo.md\'');
+      done();
+    }
   });
 
   it('should not try to read when options.read is false', function () {
