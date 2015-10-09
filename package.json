@@ -1,7 +1,7 @@
 {
   "name": "file-contents",
   "description": "Set the `contents` property on a file object. Abstraction from vinyl-fs to support stream or non-stream usage.",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "homepage": "https://github.com/jonschlinkert/file-contents",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/file-contents",
@@ -24,6 +24,8 @@
     "extend-shallow": "^2.0.0",
     "file-stat": "^0.1.0",
     "graceful-fs": "^4.1.2",
+    "is-buffer": "^1.1.0",
+    "is-utf8": "^0.2.0",
     "lazy-cache": "^0.2.3",
     "through2": "^2.0.0"
   },
