@@ -27,7 +27,7 @@ gulp.task('test', ['coverage'], function () {
     .pipe(istanbul.writeReports({
       reporters: [ 'text' ],
       reportOpts: {dir: 'coverage', file: 'summary.txt'}
-    }))
+    }));
 });
 
 gulp.task('default', ['lint', 'test']);
