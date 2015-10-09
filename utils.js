@@ -1,12 +1,6 @@
 'use strict';
 
 var utils = require('lazy-cache')(require);
-
-/**
- * Temporarily re-assign `require` so we can fool browserify
- * into recognizing lazy deps.
- */
-
 var fn = require;
 require = utils;
 
@@ -19,12 +13,15 @@ require('file-stat', 'stats');
 require('graceful-fs', 'fs');
 require('extend-shallow', 'extend');
 require('through2', 'through');
-
-/**
- * Reset require
- */
-
+require('is-utf8');
 require = fn;
+
+utils.stripBom = function(val) {
+  if (utils.isUtf8(val) && val.slice(0, 3).toString() === '\uFEFF') {
+    return val.slice(3);
+  }
+  return val;
+};
 
 /**
  * Expose utils

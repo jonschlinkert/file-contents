@@ -11,8 +11,6 @@ var utils = require('./utils');
 
 module.exports = function fileContents(options) {
   return utils.through.obj(function (file, enc, next) {
-    var stream = this;
-
     async(file, options, function (err, res) {
       if (err) {
         next(err);
@@ -49,34 +47,28 @@ function async(file, options, cb) {
   if (!file.stat) {
     return utils.stats.getStats(file, function (err, res) {
       if (err) return cb(err);
-
       async(res, options, cb);
     });
   }
 
   try {
     if (file.stat.isDirectory()) {
-      cb(null, file);
-      return;
+      return cb(null, file);
     }
   } catch(err) {
-    cb(err);
-    return;
+    return cb(err);
   }
 
   var opts = utils.extend({}, options, file.options || {});
   if (opts.noread === true || opts.read === false) {
-    cb(null, file);
-    return;
+    return cb(null, file);
   }
 
   if (opts.buffer !== false) {
     return utils.fs.readFile(file.path, function(err, data) {
-      if (err) {
-        cb(err);
-        return;
-      }
-      file.contents = data;
+      if (err) return cb(err);
+
+      file.contents = utils.stripBom(data);
       cb(null, file);
     });
   }
@@ -86,7 +78,6 @@ function async(file, options, cb) {
     cb(null, file);
   } catch (err) {
     cb(err);
-    return;
   }
 }
 
@@ -103,12 +94,11 @@ function sync(file, options) {
     throw new TypeError('expected file to be an object.');
   }
 
-  var fs = utils.fs;
-  if (typeof file.stat === 'undefined') {
-    file.stat = fs.lstatSync(file.path);
+  if (!file.stat) {
+    file.stat = utils.fs.lstatSync(file.path);
   }
 
-  if (isDirSync(file)) {
+  if (file.stat.isDirectory()) {
     return file;
   }
 
@@ -118,22 +108,14 @@ function sync(file, options) {
   }
 
   if (opts.buffer !== false) {
-    file.contents = fs.readFileSync(file.path);
+    file.contents = utils.stripBom(utils.fs.readFileSync(file.path));
     return file;
   }
 
   try {
-    file.contents = fs.createReadStream(file.path);
+    file.contents = utils.fs.createReadStream(file.path);
     return file;
   } catch (err) {
-    throw err;
-  }
-}
-
-function isDirSync(file) {
-  try {
-    return file.stat.isDirectory();
-  } catch(err) {
     throw err;
   }
 }
