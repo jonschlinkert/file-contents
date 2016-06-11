@@ -1,6 +1,5 @@
 'use strict';
 
-var fs = require('fs');
 var utils = require('lazy-cache')(require);
 var fn = require;
 require = utils;
@@ -77,8 +76,6 @@ utils.syncContent = function(file) {
       var content;
       if (typeof this._content === 'string') {
         content = this._content;
-      } else if (this.contents === null) {
-        content = null;
       } else if (utils.isBuffer(this.contents)) {
         content = this.contents.toString();
       } else {
@@ -130,7 +127,7 @@ function syncContents(file, val) {
     utils.define(file, '_contents', val);
     utils.define(file, '_content', val);
   }
-  if (typeof val === null) {
+  if (val === null) {
     file._contents = null;
     file._content = null;
   }
