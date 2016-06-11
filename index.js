@@ -10,8 +10,8 @@ var utils = require('./utils');
  */
 
 module.exports = function fileContents(options) {
-  return utils.through.obj(function (file, enc, next) {
-    async(file, options, function (err, res) {
+  return utils.through.obj(function(file, enc, next) {
+    async(file, options, function(err, res) {
       if (err) {
         next(err);
         return;
@@ -41,11 +41,11 @@ function async(file, options, cb) {
   }
 
   if (typeof cb !== 'function') {
-    throw new TypeError('expected callback to be a function');
+    throw new TypeError('expected a callback function');
   }
 
   if (!file.stat) {
-    return utils.stats.getStats(file, function (err, res) {
+    return utils.stats.lstat(file, function(err, res) {
       if (err) return cb(err);
       async(res, options, cb);
     });
@@ -53,15 +53,23 @@ function async(file, options, cb) {
 
   try {
     if (file.stat.isDirectory()) {
-      return cb(null, file);
+      cb(null, file);
+      return;
     }
-  } catch(err) {
-    return cb(err);
+  } catch (err) {
+    cb(err);
+    return;
   }
 
   var opts = utils.extend({}, options, file.options || {});
   if (opts.noread === true || opts.read === false) {
-    return cb(null, file);
+    cb(null, file);
+    return;
+  }
+
+  if (file.contents || file.contents === null) {
+    cb(null, file);
+    return;
   }
 
   if (opts.buffer !== false) {
@@ -69,12 +77,13 @@ function async(file, options, cb) {
       if (err) return cb(err);
 
       file.contents = utils.stripBom(data);
+      utils.syncContents(file, opts);
       cb(null, file);
     });
   }
 
   try {
-    file.contents = utils.fs.createReadStream(file.path);
+    utils.syncContents(file, opts);
     cb(null, file);
   } catch (err) {
     cb(err);
@@ -91,11 +100,11 @@ function async(file, options, cb) {
 
 function sync(file, options) {
   if (typeof file !== 'object') {
-    throw new TypeError('expected file to be an object.');
+    throw new TypeError('expected file to be an object');
   }
 
   if (!file.stat) {
-    file.stat = utils.fs.lstatSync(file.path);
+    utils.stats.lstatSync(file);
   }
 
   if (file.stat.isDirectory()) {
@@ -103,21 +112,8 @@ function sync(file, options) {
   }
 
   var opts = utils.extend({}, options, file.options);
-  if (opts.noread === true || opts.read === false) {
-    return file;
-  }
-
-  if (opts.buffer !== false) {
-    file.contents = utils.stripBom(utils.fs.readFileSync(file.path));
-    return file;
-  }
-
-  try {
-    file.contents = utils.fs.createReadStream(file.path);
-    return file;
-  } catch (err) {
-    throw err;
-  }
+  utils.syncContents(file, opts);
+  return file;
 }
 
 /**
