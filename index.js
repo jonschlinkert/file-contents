@@ -10,13 +10,13 @@ var utils = require('./utils');
  */
 
 module.exports = function fileContents(options) {
-  return utils.through.obj(function(file, enc, next) {
+  return utils.through.obj(function(file, enc, cb) {
     async(file, options, function(err, res) {
       if (err) {
-        next(err);
+        cb(err);
         return;
       }
-      next(null, res);
+      cb(null, res);
     });
   });
 };
@@ -46,7 +46,10 @@ function async(file, options, cb) {
 
   if (!file.stat) {
     return utils.stats.lstat(file, function(err, res) {
-      if (err) return cb(err);
+      if (err) {
+        cb(err);
+        return;
+      }
       async(res, options, cb);
     });
   }
@@ -74,7 +77,10 @@ function async(file, options, cb) {
 
   if (opts.buffer !== false) {
     return utils.fs.readFile(file.path, function(err, data) {
-      if (err) return cb(err);
+      if (err) {
+        cb(err);
+        return;
+      }
 
       file.contents = utils.stripBom(data);
       utils.syncContents(file, opts);
