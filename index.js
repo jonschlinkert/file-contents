@@ -31,10 +31,6 @@ module.exports = function fileContents(options) {
  */
 
 function async(file, options, cb) {
-  if (typeof file !== 'object') {
-    throw new TypeError('expected file to be an object');
-  }
-
   if (typeof options === 'function') {
     cb = options;
     options = {};
@@ -44,18 +40,17 @@ function async(file, options, cb) {
     throw new TypeError('expected a callback function');
   }
 
-  if (!file.stat) {
-    return utils.stats.lstat(file, function(err, res) {
-      if (err) {
-        cb(err);
-        return;
-      }
-      async(res, options, cb);
-    });
+  if (!utils.isObject(file)) {
+    cb(new TypeError('expected file to be an object'));
+    return;
+  }
+
+  if (typeof file.stat === 'undefined') {
+    utils.stats.lstatSync(file);
   }
 
   try {
-    if (file.stat.isDirectory()) {
+    if (file.stat === null || file.stat.isDirectory()) {
       cb(null, file);
       return;
     }
@@ -71,6 +66,7 @@ function async(file, options, cb) {
   }
 
   if (file.contents || file.contents === null) {
+    utils.syncContents(file, opts);
     cb(null, file);
     return;
   }
@@ -113,7 +109,7 @@ function sync(file, options) {
     utils.stats.lstatSync(file);
   }
 
-  if (file.stat.isDirectory()) {
+  if (!file.stat || file.stat.isDirectory()) {
     return file;
   }
 

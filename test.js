@@ -75,19 +75,16 @@ describe('file-contents', function() {
           assert.equal(file.contents.toString().slice(-4), 'fooo');
           assert.equal(file.contents.toString(), file.content);
         })
-        .on('end', function() {
-          cb();
-        });
+        .on('end', cb);
     });
 
-    it('should emit errors', function(cb) {
+    it('not error when a file does not exist', function(cb) {
       streamify('fofof.md')
         .pipe(contents({buffer: false}))
-        .on('error', function(err) {
-          assert(err);
-          assert(err.message, 'no such file or directory');
-          cb();
-        });
+        .on('data', function() {
+        })
+        .on('error', cb)
+        .on('end', cb);
     });
 
     it('should handle stat errors:', function(cb) {
@@ -111,18 +108,15 @@ describe('file-contents', function() {
       });
     });
 
-    it('should throw an error when file is invalid', function(cb) {
-      try {
-        contents.async();
-        cb(new Error('expected an error'));
-      } catch(err) {
+    it('should error when file is invalid', function(cb) {
+      contents.async(null, function(err) {
         assert(err);
         assert.equal(err.message, 'expected file to be an object');
         cb();
-      }
+      });
     });
 
-    it('should throw an error when callback is missing', function(cb) {
+    it('should throw an error when callback is not a function', function(cb) {
       try {
         contents.async({});
         cb(new Error('expected an error'));
@@ -179,12 +173,8 @@ describe('file-contents', function() {
       });
     });
 
-    it('should handle read errors when a file does not exist:', function(cb) {
-      contents.async({path: 'foo.md'}, function(err) {
-        assert(err);
-        assert.equal(err.message, 'ENOENT: no such file or directory, lstat \'foo.md\'');
-        cb();
-      });
+    it('should not error when a file does not exist:', function(cb) {
+      contents.async({path: 'foo.md'}, cb);
     });
 
     it('should not read the file when options.read is false:', function(cb) {
@@ -229,14 +219,12 @@ describe('file-contents', function() {
       assert.equal(typeof file.contents, 'undefined');
     });
 
-    it('should handle errors when a file does not exist:', function(cb) {
+    it('should not error when a file does not exist:', function(cb) {
       try {
         contents.sync({path: 'foo.md'});
-        cb(new Error('expected an error'));
-      } catch(err) {
-        assert(err);
-        assert.equal(err.message, 'ENOENT: no such file or directory, lstat \'foo.md\'');
         cb();
+      } catch(err) {
+        cb(err);
       }
     });
 
