@@ -45,6 +45,10 @@ utils.isStream = function(val) {
     && (typeof val.on === 'function');
 };
 
+/**
+ * Return true if a file exists
+ */
+
 utils.fileExists = function(file) {
   if ('exists' in file) return;
   var exists;
@@ -102,9 +106,9 @@ utils.syncContents = function(file, options) {
         contents = this._contents;
       } else if (opts.read === false || opts.noread === true || !this.exists) {
         contents = null;
-      } else if (opts.buffer !== false) {
+      } else if (opts.buffer !== false && this.stat && this.stat.isFile()) {
         contents = utils.stripBom(utils.fs.readFileSync(this.path));
-      } else {
+      } else if (this.stat && this.stat.isFile()) {
         contents = utils.fs.createReadStream(this.path);
       }
 

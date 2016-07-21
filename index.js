@@ -45,20 +45,6 @@ function async(file, options, cb) {
     return;
   }
 
-  if (typeof file.stat === 'undefined') {
-    utils.stats.lstatSync(file);
-  }
-
-  try {
-    if (file.stat === null || file.stat.isDirectory()) {
-      cb(null, file);
-      return;
-    }
-  } catch (err) {
-    cb(err);
-    return;
-  }
-
   var opts = utils.extend({}, options, file.options || {});
   if (opts.noread === true || opts.read === false) {
     cb(null, file);
@@ -68,6 +54,21 @@ function async(file, options, cb) {
   if (file.contents || file.contents === null) {
     utils.syncContents(file, opts);
     cb(null, file);
+    return;
+  }
+
+  if (typeof file.stat === 'undefined') {
+    utils.stats.lstatSync(file);
+  }
+
+  try {
+    if (!file.stat || file.stat.isDirectory()) {
+      utils.syncContents(file, opts);
+      cb(null, file);
+      return;
+    }
+  } catch (err) {
+    cb(err);
     return;
   }
 
@@ -101,7 +102,7 @@ function async(file, options, cb) {
  */
 
 function sync(file, options) {
-  if (typeof file !== 'object') {
+  if (!utils.isObject(file)) {
     throw new TypeError('expected file to be an object');
   }
 
@@ -109,11 +110,26 @@ function sync(file, options) {
     utils.stats.lstatSync(file);
   }
 
-  if (!file.stat || file.stat.isDirectory()) {
+  var opts = utils.extend({}, options, file.options || {});
+  if (opts.noread === true || opts.read === false) {
     return file;
   }
 
-  var opts = utils.extend({}, options, file.options);
+  if (file.contents || file.contents === null) {
+    utils.syncContents(file, opts);
+    return file;
+  }
+
+  if (opts.buffer !== false) {
+    if (!file.stat || (typeof file.stat.isDirectory === 'function' && file.stat.isDirectory())) {
+      return file;
+    }
+    var data = utils.fs.readFileSync(file.path);
+    file.contents = utils.stripBom(data);
+    utils.syncContents(file, opts);
+    return file;
+  }
+
   utils.syncContents(file, opts);
   return file;
 }

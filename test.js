@@ -1,16 +1,18 @@
 'use strict';
 
 require('mocha');
+var File = require('vinyl');
 var isBuffer = require('is-buffer');
 var through = require('through2');
 var assert = require('assert');
 var utils = require('./utils');
 var contents = require('./');
 
-function streamify(fp, file) {
+function streamify(fp, file, contents) {
   var stream = through.obj();
   file = file || {};
   file.path = fp;
+  if (contents) file.contents = contents;
   stream.write(file);
   stream.end();
   return stream;
@@ -24,10 +26,9 @@ describe('file-contents', function() {
         .pipe(contents())
         .on('data', function(file) {
           assert(isBuffer(file.contents));
+          assert.equal(typeof file.content, 'string');
         })
-        .on('end', function() {
-          cb();
-        });
+        .on('end', cb);
     });
 
     it('should only read once', function(cb) {
@@ -46,10 +47,29 @@ describe('file-contents', function() {
         .pipe(contents())
         .on('data', function(file) {
           assert.equal(file.contents.toString().slice(-6), 'foobar');
+          assert.equal(file.content.slice(-6), 'foobar');
         })
-        .on('end', function() {
-          cb();
-        });
+        .on('end', cb);
+    });
+
+    it('should work when a file does not exist on the file system', function(cb) {
+      streamify('foo.txt', null, 'bar')
+        .pipe(contents())
+        .on('data', function(file) {
+          assert.equal(file.content, null);
+          assert.equal(file.contents, null);
+          assert.equal(file.contents, file.content);
+        })
+        .pipe(through.obj(function(file, enc, next) {
+          next(null, new File({path: file.path, contents: new Buffer('bar')}));
+        }))
+        .pipe(contents())
+        .on('data', function(file) {
+          assert.equal(file.content, 'bar');
+          assert.equal(file.contents, 'bar');
+          assert.equal(file.contents.toString(), file.content);
+        })
+        .on('end', cb);
     });
 
     it('should sync the `content` and `contents` properties', function(cb) {
@@ -78,7 +98,7 @@ describe('file-contents', function() {
         .on('end', cb);
     });
 
-    it('not error when a file does not exist', function(cb) {
+    it('should not error when a file does not exist and does not have contents', function(cb) {
       streamify('fofof.md')
         .pipe(contents({buffer: false}))
         .on('data', function() {
@@ -210,6 +230,12 @@ describe('file-contents', function() {
 
     it('should sync with file.content', function() {
       var file = contents.sync({path: 'README.md'});
+      assert.equal(file.contents.toString(), file.content);
+    });
+
+    it('should work with files that do not exist on the file system', function() {
+      var file = new File({path: 'foo.txt', contents: new Buffer('bar')});
+      contents.sync(file);
       assert.equal(file.contents.toString(), file.content);
     });
 
