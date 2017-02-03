@@ -1,7 +1,7 @@
 {
   "name": "file-contents",
   "description": "Set the `contents` property on a file object. Abstraction from vinyl-fs to support stream or non-stream usage.",
-  "version": "0.3.2",
+  "version": "1.0.0",
   "homepage": "https://github.com/jonschlinkert/file-contents",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/file-contents",
