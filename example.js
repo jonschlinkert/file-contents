@@ -10,6 +10,6 @@ function toStream(fp) {
 
 toStream('README.md')
   .pipe(contents())
-  .on('data', function (file) {
+  .on('data', function(file) {
     console.log(file.contents.toString());
   });

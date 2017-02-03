@@ -18,7 +18,7 @@ gulp.task('test', ['coverage'], function() {
 });
 
 gulp.task('lint', function() {
-  return gulp.src(['*.js'].concat(lib))
+  return gulp.src('*.js')
     .pipe(eslint())
     .pipe(eslint.format());
 });
