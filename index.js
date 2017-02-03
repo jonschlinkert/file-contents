@@ -1,5 +1,6 @@
 'use strict';
 
+var fs = require('fs');
 var utils = require('./utils');
 
 /**
@@ -7,11 +8,12 @@ var utils = require('./utils');
  *
  * @param  {Object} `options`
  * @return {Object} File object.
+ * @api public
  */
 
 module.exports = function(options) {
   return utils.through.obj(function(file, enc, next) {
-    asyncContents(file, options, next);
+    contentsAsync(file, options, next);
   });
 };
 
@@ -24,7 +26,7 @@ module.exports = function(options) {
  * @return {Object}
  */
 
-function asyncContents(file, options, cb) {
+function contentsAsync(file, options, cb) {
   if (typeof options === 'function') {
     cb = options;
     options = {};
@@ -39,14 +41,8 @@ function asyncContents(file, options, cb) {
     return;
   }
 
-  utils.stats.stat(file, function(err, file) {
-    if (err && err.code !== 'ENOENT') {
-      cb(err);
-      return;
-    }
-    utils.syncContents(file, options);
-    cb(null, file);
-  });
+  contentsSync(file, options);
+  cb(null, file);
 }
 
 /**
@@ -57,12 +53,23 @@ function asyncContents(file, options, cb) {
  * @return {Object}
  */
 
-function syncContents(file, options) {
+function contentsSync(file, options) {
   if (!utils.isObject(file)) {
     throw new TypeError('expected file to be an object');
   }
 
-  utils.stats.statSync(file);
+  try {
+    // ideally we want to stat the real, initial filepath
+    file.stat = fs.lstatSync(file.history[0]);
+  } catch (err) {
+    try {
+      // if that doesn't work, try again
+      file.stat = fs.lstatSync(file.path);
+    } catch (err) {
+      file.stat = new fs.Stats();
+    }
+  }
+
   utils.syncContents(file, options);
   return file;
 }
@@ -71,10 +78,10 @@ function syncContents(file, options) {
  * Expose `async` method
  */
 
-module.exports.async = asyncContents;
+module.exports.async = contentsAsync;
 
 /**
  * Expose `sync` method
  */
 
-module.exports.sync = syncContents;
+module.exports.sync = contentsSync;

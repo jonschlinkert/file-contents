@@ -56,8 +56,8 @@ describe('file-contents', function() {
       streamify('foo.txt', null, 'bar')
         .pipe(contents())
         .on('data', function(file) {
-          assert.equal(file.content, null);
-          assert.equal(file.contents, null);
+          assert.equal(file.content, 'bar');
+          assert.equal(file.contents.toString(), 'bar');
           assert.equal(file.contents, file.content);
         })
         .pipe(through.obj(function(file, enc, next) {
