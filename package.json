@@ -23,11 +23,8 @@
   "dependencies": {
     "define-property": "^0.2.5",
     "extend-shallow": "^2.0.1",
-    "file-stat": "^1.0.0",
-    "fs-exists-sync": "^0.1.0",
-    "graceful-fs": "^4.1.11",
     "is-buffer": "^1.1.4",
-    "isobject": "^3.0.0",
+    "kind-of": "^3.1.0",
     "lazy-cache": "^2.0.2",
     "strip-bom-buffer": "^0.1.1",
     "strip-bom-string": "^0.1.2",
