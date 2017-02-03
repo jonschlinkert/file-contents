@@ -9,15 +9,9 @@ var utils = require('./utils');
  * @return {Object} File object.
  */
 
-module.exports = function fileContents(options) {
-  return utils.through.obj(function(file, enc, cb) {
-    async(file, options, function(err, res) {
-      if (err) {
-        cb(err);
-        return;
-      }
-      cb(null, res);
-    });
+module.exports = function(options) {
+  return utils.through.obj(function(file, enc, next) {
+    asyncContents(file, options, next);
   });
 };
 
@@ -30,7 +24,7 @@ module.exports = function fileContents(options) {
  * @return {Object}
  */
 
-function async(file, options, cb) {
+function asyncContents(file, options, cb) {
   if (typeof options === 'function') {
     cb = options;
     options = {};
@@ -45,52 +39,14 @@ function async(file, options, cb) {
     return;
   }
 
-  var opts = utils.extend({}, options, file.options || {});
-  if (opts.noread === true || opts.read === false) {
-    cb(null, file);
-    return;
-  }
-
-  if (file.contents || file.contents === null) {
-    utils.syncContents(file, opts);
-    cb(null, file);
-    return;
-  }
-
-  if (typeof file.stat === 'undefined') {
-    utils.stats.lstatSync(file);
-  }
-
-  try {
-    if (!file.stat || file.stat.isDirectory()) {
-      utils.syncContents(file, opts);
-      cb(null, file);
+  utils.stats.stat(file, function(err, file) {
+    if (err && err.code !== 'ENOENT') {
+      cb(err);
       return;
     }
-  } catch (err) {
-    cb(err);
-    return;
-  }
-
-  if (opts.buffer !== false) {
-    return utils.fs.readFile(file.path, function(err, data) {
-      if (err) {
-        cb(err);
-        return;
-      }
-
-      file.contents = utils.stripBom(data);
-      utils.syncContents(file, opts);
-      cb(null, file);
-    });
-  }
-
-  try {
-    utils.syncContents(file, opts);
+    utils.syncContents(file, options);
     cb(null, file);
-  } catch (err) {
-    cb(err);
-  }
+  });
 }
 
 /**
@@ -101,36 +57,13 @@ function async(file, options, cb) {
  * @return {Object}
  */
 
-function sync(file, options) {
+function syncContents(file, options) {
   if (!utils.isObject(file)) {
     throw new TypeError('expected file to be an object');
   }
 
-  if (!file.stat) {
-    utils.stats.lstatSync(file);
-  }
-
-  var opts = utils.extend({}, options, file.options || {});
-  if (opts.noread === true || opts.read === false) {
-    return file;
-  }
-
-  if (file.contents || file.contents === null) {
-    utils.syncContents(file, opts);
-    return file;
-  }
-
-  if (opts.buffer !== false) {
-    if (!file.stat || (typeof file.stat.isDirectory === 'function' && file.stat.isDirectory())) {
-      return file;
-    }
-    var data = utils.fs.readFileSync(file.path);
-    file.contents = utils.stripBom(data);
-    utils.syncContents(file, opts);
-    return file;
-  }
-
-  utils.syncContents(file, opts);
+  utils.stats.statSync(file);
+  utils.syncContents(file, options);
   return file;
 }
 
@@ -138,10 +71,10 @@ function sync(file, options) {
  * Expose `async` method
  */
 
-module.exports.async = async;
+module.exports.async = asyncContents;
 
 /**
  * Expose `sync` method
  */
 
-module.exports.sync = sync;
+module.exports.sync = syncContents;

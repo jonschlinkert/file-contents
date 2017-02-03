@@ -83,15 +83,16 @@ utils.syncContent = function(file) {
       } else if (utils.isBuffer(this.contents)) {
         content = this.contents.toString();
       } else {
+        // null or stream
         content = this.contents;
       }
-      return content;
+      return this._content;
     }
   });
 };
 
 utils.syncContents = function(file, options) {
-  var opts = utils.extend({}, options);
+  var opts = utils.extend({}, options, file.options);
   utils.syncContent(file);
 
   Object.defineProperty(file, 'contents', {

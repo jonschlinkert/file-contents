@@ -106,16 +106,6 @@ describe('file-contents', function() {
         .on('error', cb)
         .on('end', cb);
     });
-
-    it('should handle stat errors:', function(cb) {
-      streamify('fofof.md', {stat: {}})
-        .pipe(contents({buffer: false}))
-        .on('error', function(err) {
-          assert(err);
-          assert.equal(err.message, 'file.stat.isDirectory is not a function');
-          cb();
-        });
-    });
   });
 
   describe('async', function() {
@@ -140,7 +130,7 @@ describe('file-contents', function() {
       try {
         contents.async({});
         cb(new Error('expected an error'));
-      } catch(err) {
+      } catch (err) {
         assert(err);
         assert.equal(err.message, 'expected a callback function');
         cb();
@@ -249,7 +239,7 @@ describe('file-contents', function() {
       try {
         contents.sync({path: 'foo.md'});
         cb();
-      } catch(err) {
+      } catch (err) {
         cb(err);
       }
     });
@@ -257,7 +247,7 @@ describe('file-contents', function() {
     it('should not try to read when options.read is false', function() {
       var file = contents.sync({path: 'fixtures'}, {read: false});
       assert(file);
-      assert.equal(typeof file.contents, 'undefined');
+      assert.equal(file.contents, null);
     });
 
     it('should not try to read when options.noread is true', function() {
@@ -276,7 +266,7 @@ describe('file-contents', function() {
       try {
         contents.sync();
         cb(new Error('expected an error'));
-      } catch(err) {
+      } catch (err) {
         assert(err);
         assert.equal(err.message, 'expected file to be an object');
         cb();
